@@ -1344,7 +1344,7 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
       ast->print_cr("Note: The histogram indicates how many blocks (as a percentage\n"
                     "      of all blocks) have a size in the given range.\n"
                     "      %ld characters are printed per percentage point.\n", pctFactor/100);
-      ast->print_cr("total size   of all blocks: %7" INT64_FORMAT_W(7) "M", (total_size<<log2_seg_size)/M);
+      ast->print_cr("total size   of all blocks: " INT64_FORMAT_W(7) "M", (total_size<<log2_seg_size)/M);
       ast->print_cr("total number of all blocks: %7ld\n", total_count);
       BUFFEREDSTREAM_FLUSH_LOCKED("")
 
@@ -1384,7 +1384,7 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
       ast->print_cr("Note: The histogram indicates how much space (as a percentage of all\n"
                     "      occupied space) is used by the blocks in the given size range.\n"
                     "      %ld characters are printed per percentage point.\n", pctFactor/100);
-      ast->print_cr("total size   of all blocks: %7" INT64_FORMAT_W(7) "M", (total_size<<log2_seg_size)/M);
+      ast->print_cr("total size   of all blocks: " INT64_FORMAT_W(7) "M", (total_size<<log2_seg_size)/M);
       ast->print_cr("total number of all blocks: %7ld\n", total_count);
       BUFFEREDSTREAM_FLUSH_LOCKED("")
 
