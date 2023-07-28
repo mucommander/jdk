@@ -223,7 +223,7 @@ static bool is_directory_secure(const char* path) {
       // unexpected error, declare the path insecure
       if (PrintMiscellaneous && Verbose) {
         warning("could not get attributes for file %s: "
-                " lasterror = %d\n", path, lasterror);
+                " lasterror = %ld\n", path, lasterror);
       }
       return false;
     }
@@ -256,7 +256,7 @@ static bool is_directory_secure(const char* path) {
     //
     if (PrintMiscellaneous && Verbose) {
       warning("%s is not a directory, file attributes = "
-              INTPTR_FORMAT "\n", path, fa);
+              "0x%08lx\n", path, fa);
     }
     return false;
   }
@@ -519,7 +519,7 @@ static bool is_alive(int pid) {
     if (PrintMiscellaneous && Verbose) {
       DWORD lastError = GetLastError();
       if (lastError != ERROR_INVALID_PARAMETER) {
-        warning("OpenProcess failed: %d\n", GetLastError());
+        warning("OpenProcess failed: %ld\n", GetLastError());
       }
     }
     return false;
@@ -528,7 +528,7 @@ static bool is_alive(int pid) {
   DWORD exit_status;
   if (!GetExitCodeProcess(ph, &exit_status)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("GetExitCodeProcess failed: %d\n", GetLastError());
+      warning("GetExitCodeProcess failed: %ld\n", GetLastError());
     }
     CloseHandle(ph);
     return false;
@@ -579,7 +579,7 @@ static bool is_filesystem_secure(const char* path) {
     // we can't get information about the volume, so assume unsafe.
     if (PrintMiscellaneous && Verbose) {
       warning("could not get device information for %s: "
-              " path = %s: lasterror = %d\n",
+              " path = %s: lasterror = %ld\n",
               root_path, path, GetLastError());
     }
     return false;
@@ -706,7 +706,7 @@ static HANDLE create_file_mapping(const char* name, HANDLE fh, LPSECURITY_ATTRIB
 
   if (fmh == nullptr) {
     if (PrintMiscellaneous && Verbose) {
-      warning("CreateFileMapping failed, lasterror = %d\n", GetLastError());
+      warning("CreateFileMapping failed, lasterror = %ld\n", GetLastError());
     }
     return nullptr;
   }
@@ -719,7 +719,7 @@ static HANDLE create_file_mapping(const char* name, HANDLE fh, LPSECURITY_ATTRIB
     // and/or mapped views of this mapping object.
     //
     if (PrintMiscellaneous && Verbose) {
-      warning("file mapping already exists, lasterror = %d\n", GetLastError());
+      warning("file mapping already exists, lasterror = %ld\n", GetLastError());
     }
 
     CloseHandle(fmh);
@@ -785,7 +785,7 @@ static PSID get_user_sid(HANDLE hProcess) {
   // get the process token
   if (!OpenProcessToken(hProcess, TOKEN_READ, &hAccessToken)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("OpenProcessToken failure: lasterror = %d \n", GetLastError());
+      warning("OpenProcessToken failure: lasterror = %ld \n", GetLastError());
     }
     return nullptr;
   }
@@ -797,8 +797,8 @@ static PSID get_user_sid(HANDLE hProcess) {
     DWORD lasterror = GetLastError();
     if (lasterror != ERROR_INSUFFICIENT_BUFFER) {
       if (PrintMiscellaneous && Verbose) {
-        warning("GetTokenInformation failure: lasterror = %d,"
-                " rsize = %d\n", lasterror, rsize);
+        warning("GetTokenInformation failure: lasterror = %ld,"
+                " rsize = %ld\n", lasterror, rsize);
       }
       CloseHandle(hAccessToken);
       return nullptr;
@@ -810,8 +810,8 @@ static PSID get_user_sid(HANDLE hProcess) {
   // get the user token information
   if (!GetTokenInformation(hAccessToken, TokenUser, token_buf, rsize, &rsize)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("GetTokenInformation failure: lasterror = %d,"
-              " rsize = %d\n", GetLastError(), rsize);
+      warning("GetTokenInformation failure: lasterror = %ld,"
+              " rsize = %ld\n", GetLastError(), rsize);
     }
     FREE_C_HEAP_ARRAY(char, token_buf);
     CloseHandle(hAccessToken);
@@ -823,8 +823,8 @@ static PSID get_user_sid(HANDLE hProcess) {
 
   if (!CopySid(nbytes, pSID, token_buf->User.Sid)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("GetTokenInformation failure: lasterror = %d,"
-              " rsize = %d\n", GetLastError(), rsize);
+      warning("GetTokenInformation failure: lasterror = %ld,"
+              " rsize = %ld\n", GetLastError(), rsize);
     }
     FREE_C_HEAP_ARRAY(char, token_buf);
     FREE_C_HEAP_ARRAY(char, pSID);
@@ -868,7 +868,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
   // retrieve any existing access control list.
   if (!GetSecurityDescriptorDacl(pSD, &exists, &oldACL, &isdefault)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("GetSecurityDescriptor failure: lasterror = %d \n",
+      warning("GetSecurityDescriptor failure: lasterror = %ld \n",
               GetLastError());
     }
     return false;
@@ -888,7 +888,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
                            sizeof(ACL_SIZE_INFORMATION),
                            AclSizeInformation)) {
       if (PrintMiscellaneous && Verbose) {
-        warning("GetAclInformation failure: lasterror = %d \n", GetLastError());
+        warning("GetAclInformation failure: lasterror = %ld \n", GetLastError());
         return false;
       }
     }
@@ -916,7 +916,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
 
   if (!InitializeAcl(newACL, newACLsize, ACL_REVISION)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("InitializeAcl failure: lasterror = %d \n", GetLastError());
+      warning("InitializeAcl failure: lasterror = %ld \n", GetLastError());
     }
     FREE_C_HEAP_ARRAY(char, newACL);
     return false;
@@ -929,7 +929,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
       LPVOID ace;
       if (!GetAce(oldACL, ace_index, &ace)) {
         if (PrintMiscellaneous && Verbose) {
-          warning("InitializeAcl failure: lasterror = %d \n", GetLastError());
+          warning("InitializeAcl failure: lasterror = %ld \n", GetLastError());
         }
         FREE_C_HEAP_ARRAY(char, newACL);
         return false;
@@ -956,7 +956,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
         if (!AddAce(newACL, ACL_REVISION, MAXDWORD, ace,
                     ((PACE_HEADER)ace)->AceSize)) {
           if (PrintMiscellaneous && Verbose) {
-            warning("AddAce failure: lasterror = %d \n", GetLastError());
+            warning("AddAce failure: lasterror = %ld \n", GetLastError());
           }
           FREE_C_HEAP_ARRAY(char, newACL);
           return false;
@@ -971,7 +971,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
     if (!AddAccessAllowedAce(newACL, ACL_REVISION,
                              aces[i].mask, aces[i].pSid)) {
       if (PrintMiscellaneous && Verbose) {
-        warning("AddAccessAllowedAce failure: lasterror = %d \n",
+        warning("AddAccessAllowedAce failure: lasterror = %ld \n",
                 GetLastError());
       }
       FREE_C_HEAP_ARRAY(char, newACL);
@@ -987,7 +987,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
       LPVOID ace;
       if (!GetAce(oldACL, ace_index, &ace)) {
         if (PrintMiscellaneous && Verbose) {
-          warning("InitializeAcl failure: lasterror = %d \n", GetLastError());
+          warning("InitializeAcl failure: lasterror = %ld \n", GetLastError());
         }
         FREE_C_HEAP_ARRAY(char, newACL);
         return false;
@@ -995,7 +995,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
       if (!AddAce(newACL, ACL_REVISION, MAXDWORD, ace,
                   ((PACE_HEADER)ace)->AceSize)) {
         if (PrintMiscellaneous && Verbose) {
-          warning("AddAce failure: lasterror = %d \n", GetLastError());
+          warning("AddAce failure: lasterror = %ld \n", GetLastError());
         }
         FREE_C_HEAP_ARRAY(char, newACL);
         return false;
@@ -1008,7 +1008,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
   if (!SetSecurityDescriptorDacl(pSD, TRUE, newACL, FALSE)) {
     if (PrintMiscellaneous && Verbose) {
       warning("SetSecurityDescriptorDacl failure:"
-              " lasterror = %d \n", GetLastError());
+              " lasterror = %ld \n", GetLastError());
     }
     FREE_C_HEAP_ARRAY(char, newACL);
     return false;
@@ -1028,7 +1028,7 @@ static bool add_allow_aces(PSECURITY_DESCRIPTOR pSD,
                                             SE_DACL_PROTECTED)) {
       if (PrintMiscellaneous && Verbose) {
         warning("SetSecurityDescriptorControl failure:"
-                " lasterror = %d \n", GetLastError());
+                " lasterror = %ld \n", GetLastError());
       }
       FREE_C_HEAP_ARRAY(char, newACL);
       return false;
@@ -1060,7 +1060,7 @@ static LPSECURITY_ATTRIBUTES make_security_attr(ace_data_t aces[], int count) {
   if (!InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION)) {
     if (PrintMiscellaneous && Verbose) {
       warning("InitializeSecurityDescriptor failure: "
-              "lasterror = %d \n", GetLastError());
+              "lasterror = %ld \n", GetLastError());
     }
     free_security_desc(pSD);
     return nullptr;
@@ -1117,7 +1117,7 @@ static LPSECURITY_ATTRIBUTES make_user_everybody_admin_security_attr(
 
     if (PrintMiscellaneous && Verbose) {
       warning("AllocateAndInitializeSid failure: "
-              "lasterror = %d \n", GetLastError());
+              "lasterror = %ld \n", GetLastError());
     }
     return nullptr;
   }
@@ -1135,7 +1135,7 @@ static LPSECURITY_ATTRIBUTES make_user_everybody_admin_security_attr(
 
     if (PrintMiscellaneous && Verbose) {
       warning("AllocateAndInitializeSid failure: "
-              "lasterror = %d \n", GetLastError());
+              "lasterror = %ld \n", GetLastError());
     }
     return nullptr;
   }
@@ -1252,13 +1252,13 @@ static bool make_user_tmp_dir(const char* dirname) {
       if (!SetFileSecurity(dirname, secInfo, pDirSA->lpSecurityDescriptor)) {
         if (PrintMiscellaneous && Verbose) {
           lasterror = GetLastError();
-          warning("SetFileSecurity failed for %s directory.  lasterror %d \n",
+          warning("SetFileSecurity failed for %s directory.  lasterror %ld \n",
                                                         dirname, lasterror);
         }
       }
     } else {
       if (PrintMiscellaneous && Verbose) {
-        warning("CreateDirectory failed: %d\n", GetLastError());
+        warning("CreateDirectory failed: %ld\n", GetLastError());
       }
       free_security_attr(pDirSA);
       return false;
@@ -1327,7 +1327,7 @@ static HANDLE create_sharedmem_resources(const char* dirname, const char* filena
   if (fh == INVALID_HANDLE_VALUE) {
     DWORD lasterror = GetLastError();
     if (PrintMiscellaneous && Verbose) {
-      warning("could not create file %s: %d\n", filename, lasterror);
+      warning("could not create file %s: %ld\n", filename, lasterror);
     }
     free_security_attr(lpSmoSA);
     return nullptr;
@@ -1371,7 +1371,7 @@ static HANDLE create_sharedmem_resources(const char* dirname, const char* filena
     if (statbuf.st_size == 0 && FlushFileBuffers(fh) != TRUE) {
       DWORD lasterror = GetLastError();
       if (PrintMiscellaneous && Verbose) {
-        warning("could not flush file %s: %d\n", filename, lasterror);
+        warning("could not flush file %s: %ld\n", filename, lasterror);
       }
       CloseHandle(fmh);
       CloseHandle(fh);
@@ -1405,10 +1405,10 @@ static HANDLE open_sharedmem_object(const char* objectname, DWORD ofm_access, TR
     DWORD lasterror = GetLastError();
     if (PrintMiscellaneous && Verbose) {
       warning("OpenFileMapping failed for shared memory object %s:"
-              " lasterror = %d\n", objectname, lasterror);
+              " lasterror = %ld\n", objectname, lasterror);
     }
     THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
-               err_msg("Could not open PerfMemory, error %d", lasterror),
+               err_msg("Could not open PerfMemory, error %ld", lasterror),
                INVALID_HANDLE_VALUE);
   }
 
@@ -1487,7 +1487,7 @@ static char* mapping_create_shared(size_t size) {
 
   if (mapAddress == nullptr) {
     if (PrintMiscellaneous && Verbose) {
-      warning("MapViewOfFile failed, lasterror = %d\n", GetLastError());
+      warning("MapViewOfFile failed, lasterror = %ld\n", GetLastError());
     }
     CloseHandle(sharedmem_fileMapHandle);
     sharedmem_fileMapHandle = nullptr;
@@ -1561,7 +1561,7 @@ static size_t sharedmem_filesize(const char* filename, TRAPS) {
 
   if ((statbuf.st_size == 0) || (statbuf.st_size % os::vm_page_size() != 0)) {
     if (PrintMiscellaneous && Verbose) {
-      warning("unexpected file size: size = " SIZE_FORMAT "\n",
+      warning("unexpected file size: size = %lu\n",
               statbuf.st_size);
     }
     THROW_MSG_0(vmSymbols::java_io_IOException(),
@@ -1641,7 +1641,7 @@ static void open_file_mapping(int vmid, char** addrp, size_t* sizep, TRAPS) {
 
   if (mapAddress == nullptr) {
     if (PrintMiscellaneous && Verbose) {
-      warning("MapViewOfFile failed, lasterror = %d\n", GetLastError());
+      warning("MapViewOfFile failed, lasterror = %ld\n", GetLastError());
     }
     CloseHandle(fmh);
     THROW_MSG(vmSymbols::java_lang_OutOfMemoryError(),
@@ -1661,7 +1661,7 @@ static void open_file_mapping(int vmid, char** addrp, size_t* sizep, TRAPS) {
   CloseHandle(fmh);
 
   log_debug(perf, memops)("mapped " SIZE_FORMAT " bytes for vmid %d at "
-                          INTPTR_FORMAT, size, vmid, mapAddress);
+                          INTPTR_FORMAT, size, vmid, p2i(mapAddress));
 }
 
 // this method unmaps the mapped view of the

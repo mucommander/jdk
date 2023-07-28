@@ -56,8 +56,8 @@
 // reserved available address space can (and will) coalesce placeholders, but
 // they will be split before being used.
 
-#define fatal_error(msg, addr, size)                  \
-  fatal(msg ": " PTR_FORMAT " " SIZE_FORMAT "M (%d)", \
+#define fatal_error(msg, addr, size)                      \
+  fatal(msg ": " INTPTR_FORMAT " " SIZE_FORMAT "M (%ld)", \
         (addr), (size) / M, GetLastError())
 
 zaddress_unsafe ZMapper::reserve(zaddress_unsafe addr, size_t size) {
@@ -116,13 +116,13 @@ HANDLE ZMapper::create_paging_file_mapping(size_t size) {
 bool ZMapper::commit_paging_file_mapping(HANDLE file_handle, uintptr_t file_offset, size_t size) {
   const uintptr_t addr = map_view_no_placeholder(file_handle, file_offset, size);
   if (addr == 0) {
-    log_error(gc)("Failed to map view of paging file mapping (%d)", GetLastError());
+    log_error(gc)("Failed to map view of paging file mapping (%ld)", GetLastError());
     return false;
   }
 
   const uintptr_t res = commit(addr, size);
   if (res != addr) {
-    log_error(gc)("Failed to commit memory (%d)", GetLastError());
+    log_error(gc)("Failed to commit memory (%ld)", GetLastError());
   }
 
   unmap_view_no_placeholder(addr, size);
@@ -177,7 +177,7 @@ uintptr_t ZMapper::commit(uintptr_t addr, size_t size) {
 HANDLE ZMapper::create_and_commit_paging_file_mapping(size_t size) {
   HANDLE const file_handle = create_paging_file_mapping(size);
   if (file_handle == 0) {
-    log_error(gc)("Failed to create paging file mapping (%d)", GetLastError());
+    log_error(gc)("Failed to create paging file mapping (%ld)", GetLastError());
     return 0;
   }
 
@@ -196,7 +196,7 @@ void ZMapper::close_paging_file_mapping(HANDLE file_handle) {
     );
 
   if (!res) {
-    fatal("Failed to close paging file handle (%d)", GetLastError());
+    fatal("Failed to close paging file handle (%ld)", GetLastError());
   }
 }
 
@@ -218,7 +218,7 @@ HANDLE ZMapper::create_shared_awe_section() {
     );
 
   if (section == nullptr) {
-    fatal("Could not create shared AWE section (%d)", GetLastError());
+    fatal("Could not create shared AWE section (%ld)", GetLastError());
   }
 
   return section;
@@ -251,7 +251,7 @@ void ZMapper::unreserve_for_shared_awe(zaddress_unsafe addr, size_t size) {
     );
 
   if (!res) {
-    fatal("Failed to unreserve memory: " PTR_FORMAT " " SIZE_FORMAT "M (%d)",
+    fatal("Failed to unreserve memory: " INTPTR_FORMAT " " SIZE_FORMAT "M (%ld)",
           untype(addr), size / M, GetLastError());
   }
 }
@@ -264,7 +264,7 @@ void ZMapper::split_placeholder(zaddress_unsafe addr, size_t size) {
     );
 
   if (!res) {
-    fatal_error("Failed to split placeholder", addr, size);
+    fatal_error("Failed to split placeholder", untype(addr), size);
   }
 }
 
@@ -276,7 +276,7 @@ void ZMapper::coalesce_placeholders(zaddress_unsafe addr, size_t size) {
     );
 
   if (!res) {
-    fatal_error("Failed to coalesce placeholders", addr, size);
+    fatal_error("Failed to coalesce placeholders", untype(addr), size);
   }
 }
 
@@ -294,7 +294,7 @@ void ZMapper::map_view_replace_placeholder(HANDLE file_handle, uintptr_t file_of
     );
 
   if (res == nullptr) {
-    fatal_error("Failed to map memory", addr, size);
+    fatal_error("Failed to map memory", untype(addr), size);
   }
 }
 
@@ -306,6 +306,6 @@ void ZMapper::unmap_view_preserve_placeholder(zaddress_unsafe addr, size_t size)
     );
 
   if (!res) {
-    fatal_error("Failed to unmap memory", addr, size);
+    fatal_error("Failed to unmap memory", untype(addr), size);
   }
 }

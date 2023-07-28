@@ -632,7 +632,7 @@ void SymbolEngine::print_state_on(outputStream* st) {
     st->print("initialization error.");
   } else {
     st->print("initialized successfully");
-    st->print(" - sym options: 0x%X", WindowsDbgHelp::symGetOptions());
+    st->print(" - sym options: 0x%lX", WindowsDbgHelp::symGetOptions());
     st->print(" - pdb path: ");
     if (WindowsDbgHelp::symGetSearchPath(::GetCurrentProcess(),
                                           g_buffers.search_path.ptr(),

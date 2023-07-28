@@ -157,7 +157,7 @@ public:
     size_t npages_res = npages;
     const bool res = AllocateUserPhysicalPages(ZAWESection, &npages_res, &_page_array[index]);
     if (!res) {
-      fatal("Failed to allocate physical memory " SIZE_FORMAT "M @ " PTR_FORMAT " (%d)",
+      fatal("Failed to allocate physical memory " SIZE_FORMAT "M @ " PTR_FORMAT " (%ld)",
             size / M, untype(offset), GetLastError());
     } else {
       log_debug(gc)("Allocated physical memory: " SIZE_FORMAT "M @ " PTR_FORMAT, size / M, untype(offset));
@@ -175,7 +175,7 @@ public:
     size_t npages_res = npages;
     const bool res = FreeUserPhysicalPages(ZAWESection, &npages_res, &_page_array[index]);
     if (!res) {
-      fatal("Failed to uncommit physical memory " SIZE_FORMAT "M @ " PTR_FORMAT " (%d)",
+      fatal("Failed to uncommit physical memory " SIZE_FORMAT "M @ " PTR_FORMAT " (%ld)",
             size, untype(offset), GetLastError());
     }
 
@@ -188,7 +188,7 @@ public:
 
     const bool res = MapUserPhysicalPages((char*)untype(addr), npages, &_page_array[index]);
     if (!res) {
-      fatal("Failed to map view " PTR_FORMAT " " SIZE_FORMAT "M @ " PTR_FORMAT " (%d)",
+      fatal("Failed to map view " INTPTR_FORMAT " " SIZE_FORMAT "M @ " INTPTR_FORMAT " (%ld)",
             untype(addr), size / M, untype(offset), GetLastError());
     }
   }
@@ -198,8 +198,8 @@ public:
 
     const bool res = MapUserPhysicalPages((char*)untype(addr), npages, nullptr);
     if (!res) {
-      fatal("Failed to unmap view " PTR_FORMAT " " SIZE_FORMAT "M (%d)",
-            addr, size / M, GetLastError());
+      fatal("Failed to unmap view " INTPTR_FORMAT " " SIZE_FORMAT "M (%ld)",
+            untype(addr), size / M, GetLastError());
     }
   }
 };

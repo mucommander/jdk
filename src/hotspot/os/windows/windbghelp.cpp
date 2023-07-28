@@ -280,7 +280,7 @@ void WindowsDbgHelp::print_state_on(outputStream* st) {
   if (g_state == state_uninitialized) {
     st->print("uninitialized.");
   } else if (g_state == state_error) {
-    st->print("loading error: %u", g_dll_load_error);
+    st->print("loading error: %lu", g_dll_load_error);
   } else {
     st->print("loaded successfully ");
 

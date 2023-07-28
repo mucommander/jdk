@@ -2125,7 +2125,7 @@ C2V_VMENTRY_NULL(jobjectArray, getDeclaredFieldsInfo, (JNIEnv* env, jobject, ARG
   return array.as_jobject();
 C2V_END
 
-static jobject read_field_value(Handle obj, long displacement, jchar type_char, bool is_static, Thread* THREAD, JVMCIEnv* JVMCIENV) {
+static jobject read_field_value(Handle obj, int64_t displacement, jchar type_char, bool is_static, Thread* THREAD, JVMCIEnv* JVMCIENV) {
 
   BasicType basic_type = JVMCIENV->typeCharToBasicType(type_char, JVMCI_CHECK_NULL);
   int basic_type_elemsize = type2aelembytes(basic_type);
@@ -2212,7 +2212,7 @@ static jobject read_field_value(Handle obj, long displacement, jchar type_char, 
           // is_oop doesn't try to be completety safe but for most invalid values it provides a good
           // enough answer.  It possible to crash in the is_oop call but that just means the crash happens
           // closer to where things went wrong.
-          JVMCI_THROW_MSG_NULL(InternalError, err_msg("Read bad oop " INTPTR_FORMAT " at offset " JLONG_FORMAT " in object " INTPTR_FORMAT " of type %s",
+          JVMCI_THROW_MSG_NULL(InternalError, err_msg("Read bad oop " INTPTR_FORMAT " at offset " INT64_FORMAT " in object " INTPTR_FORMAT " of type %s",
                                                       p2i(value), displacement, p2i(obj()), obj->klass()->external_name()));
         }
 

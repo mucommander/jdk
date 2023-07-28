@@ -833,7 +833,7 @@ void MacroAssembler::debug64(char* msg, int64_t pc, int64_t regs[]) {
 void MacroAssembler::print_state64(int64_t pc, int64_t regs[]) {
   ttyLocker ttyl;
   DebuggingContext debugging{};
-  tty->print_cr("rip = 0x%016lx", (intptr_t)pc);
+  tty->print_cr("rip = " INTPTR_FORMAT, (intptr_t)pc);
 #ifndef PRODUCT
   tty->cr();
   findpc(pc);
@@ -863,13 +863,13 @@ void MacroAssembler::print_state64(int64_t pc, int64_t regs[]) {
   int64_t* rsp = &regs[16];
   int64_t* dump_sp = rsp;
   for (int col1 = 0; col1 < 8; col1++) {
-    tty->print("(rsp+0x%03x) 0x%016lx: ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
+    tty->print("(rsp+0x%03x) " INTPTR_FORMAT ": ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
     os::print_location(tty, *dump_sp++);
   }
   for (int row = 0; row < 25; row++) {
-    tty->print("(rsp+0x%03x) 0x%016lx: ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
+    tty->print("(rsp+0x%03x) " INTPTR_FORMAT ": ", (int)((intptr_t)dump_sp - (intptr_t)rsp), (intptr_t)dump_sp);
     for (int col = 0; col < 4; col++) {
-      tty->print(" 0x%016lx", (intptr_t)*dump_sp++);
+      tty->print(" " INTPTR_FORMAT, (intptr_t)*dump_sp++);
     }
     tty->cr();
   }

@@ -195,12 +195,12 @@ struct PreserveLastError {
 static LPVOID virtualAlloc(LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) {
   LPVOID result = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
   if (result != nullptr) {
-    log_trace(os)("VirtualAlloc(" PTR_FORMAT ", " SIZE_FORMAT ", %x, %x) returned " PTR_FORMAT "%s.",
+    log_trace(os)("VirtualAlloc(" INTPTR_FORMAT ", " SIZE_FORMAT ", %lx, %lx) returned " PTR_FORMAT "%s.",
                   p2i(lpAddress), dwSize, flAllocationType, flProtect, p2i(result),
                   ((lpAddress != nullptr && result != lpAddress) ? " <different base!>" : ""));
   } else {
     PreserveLastError ple;
-    log_info(os)("VirtualAlloc(" PTR_FORMAT ", " SIZE_FORMAT ", %x, %x) failed (%u).",
+    log_info(os)("VirtualAlloc(" INTPTR_FORMAT ", " SIZE_FORMAT ", %lx, %lx) failed (%lu).",
                   p2i(lpAddress), dwSize, flAllocationType, flProtect, ple.v);
   }
   return result;
@@ -210,11 +210,11 @@ static LPVOID virtualAlloc(LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationTy
 static BOOL virtualFree(LPVOID lpAddress, SIZE_T dwSize, DWORD  dwFreeType) {
   BOOL result = ::VirtualFree(lpAddress, dwSize, dwFreeType);
   if (result != FALSE) {
-    log_trace(os)("VirtualFree(" PTR_FORMAT ", " SIZE_FORMAT ", %x) succeeded",
+    log_trace(os)("VirtualFree(" PTR_FORMAT ", " SIZE_FORMAT ", %lx) succeeded",
                   p2i(lpAddress), dwSize, dwFreeType);
   } else {
     PreserveLastError ple;
-    log_info(os)("VirtualFree(" PTR_FORMAT ", " SIZE_FORMAT ", %x) failed (%u).",
+    log_info(os)("VirtualFree(" PTR_FORMAT ", " SIZE_FORMAT ", %lx) failed (%lu).",
                  p2i(lpAddress), dwSize, dwFreeType, ple.v);
   }
   return result;
@@ -225,12 +225,12 @@ static LPVOID virtualAllocExNuma(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSiz
                                  DWORD  flProtect, DWORD  nndPreferred) {
   LPVOID result = ::VirtualAllocExNuma(hProcess, lpAddress, dwSize, flAllocationType, flProtect, nndPreferred);
   if (result != nullptr) {
-    log_trace(os)("VirtualAllocExNuma(" PTR_FORMAT ", " SIZE_FORMAT ", %x, %x, %x) returned " PTR_FORMAT "%s.",
+    log_trace(os)("VirtualAllocExNuma(" INTPTR_FORMAT ", " SIZE_FORMAT ", %lx, %lx, %lx) returned " PTR_FORMAT "%s.",
                   p2i(lpAddress), dwSize, flAllocationType, flProtect, nndPreferred, p2i(result),
                   ((lpAddress != nullptr && result != lpAddress) ? " <different base!>" : ""));
   } else {
     PreserveLastError ple;
-    log_info(os)("VirtualAllocExNuma(" PTR_FORMAT ", " SIZE_FORMAT ", %x, %x, %x) failed (%u).",
+    log_info(os)("VirtualAllocExNuma(" INTPTR_FORMAT ", " SIZE_FORMAT ", %lx, %lx, %lx) failed (%lu).",
                  p2i(lpAddress), dwSize, flAllocationType, flProtect, nndPreferred, ple.v);
   }
   return result;
@@ -247,7 +247,7 @@ static LPVOID mapViewOfFileEx(HANDLE hFileMappingObject, DWORD  dwDesiredAccess,
                   ((lpBaseAddress != nullptr && result != lpBaseAddress) ? " <different base!>" : ""));
   } else {
     PreserveLastError ple;
-    log_info(os)("MapViewOfFileEx(" PTR_FORMAT ", " SIZE_FORMAT ") failed (%u).",
+    log_info(os)("MapViewOfFileEx(" INTPTR_FORMAT ", " SIZE_FORMAT ") failed (%lu).",
                  p2i(lpBaseAddress), dwNumberOfBytesToMap, ple.v);
   }
   return result;
@@ -257,10 +257,10 @@ static LPVOID mapViewOfFileEx(HANDLE hFileMappingObject, DWORD  dwDesiredAccess,
 static BOOL unmapViewOfFile(LPCVOID lpBaseAddress) {
   BOOL result = ::UnmapViewOfFile(lpBaseAddress);
   if (result != FALSE) {
-    log_trace(os)("UnmapViewOfFile(" PTR_FORMAT ") succeeded", p2i(lpBaseAddress));
+    log_trace(os)("UnmapViewOfFile(" INTPTR_FORMAT ") succeeded", p2i(lpBaseAddress));
   } else {
     PreserveLastError ple;
-    log_info(os)("UnmapViewOfFile(" PTR_FORMAT ") failed (%u).",  p2i(lpBaseAddress), ple.v);
+    log_info(os)("UnmapViewOfFile(" INTPTR_FORMAT ") failed (%lu).",  p2i(lpBaseAddress), ple.v);
   }
   return result;
 }
@@ -1258,8 +1258,8 @@ void  os::dll_unload(void *lib) {
     log_info(os)("Unloaded dll \"%s\" [" INTPTR_FORMAT "]", name, p2i(lib));
   } else {
     const DWORD errcode = ::GetLastError();
-    Events::log_dll_message(nullptr, "Attempt to unload dll \"%s\" [" INTPTR_FORMAT "] failed (error code %d)", name, p2i(lib), errcode);
-    log_info(os)("Attempt to unload dll \"%s\" [" INTPTR_FORMAT "] failed (error code %d)", name, p2i(lib), errcode);
+    Events::log_dll_message(nullptr, "Attempt to unload dll \"%s\" [" INTPTR_FORMAT "] failed (error code %ld)", name, p2i(lib), errcode);
+    log_info(os)("Attempt to unload dll \"%s\" [" INTPTR_FORMAT "] failed (error code %ld)", name, p2i(lib), errcode);
   }
 }
 
@@ -1519,7 +1519,7 @@ static int _print_module(const char* fname, address base_address,
 
   outputStream* st = (outputStream*)param;
 
-  st->print(PTR_FORMAT " - " PTR_FORMAT " \t%s\n", base_address, top_address, fname);
+  st->print(INTPTR_FORMAT " - " INTPTR_FORMAT " \t%s\n", p2i(base_address), p2i(top_address), fname);
   return 0;
 }
 
@@ -2030,7 +2030,7 @@ void os::print_siginfo(outputStream *st, const void* siginfo) {
   if (os::exception_name(er->ExceptionCode, tmp, sizeof(tmp)) == nullptr) {
     strcpy(tmp, "EXCEPTION_??");
   }
-  st->print(" %s (0x%x)", tmp, er->ExceptionCode);
+  st->print(" %s (0x%lx)", tmp, er->ExceptionCode);
 
   if ((er->ExceptionCode == EXCEPTION_ACCESS_VIOLATION ||
        er->ExceptionCode == EXCEPTION_IN_PAGE_ERROR) &&
@@ -3379,7 +3379,7 @@ char* os::pd_attempt_reserve_memory_at(char* addr, size_t bytes, bool exec) {
     }
     if (Verbose && PrintMiscellaneous) {
       reserveTimer.stop();
-      tty->print_cr("reserve_memory of %Ix bytes took " JLONG_FORMAT " ms (" JLONG_FORMAT " ticks)", bytes,
+      tty->print_cr("reserve_memory of %zx bytes took " JLONG_FORMAT " ms (" JLONG_FORMAT " ticks)", bytes,
                     reserveTimer.milliseconds(), reserveTimer.ticks());
     }
   }
@@ -3519,8 +3519,8 @@ static void warn_fail_commit_memory(char* addr, size_t bytes, bool exec) {
   int err = os::get_last_error();
   char buf[256];
   size_t buf_len = os::lasterror(buf, sizeof(buf));
-  warning("INFO: os::commit_memory(" PTR_FORMAT ", " SIZE_FORMAT
-          ", %d) failed; error='%s' (DOS error/errno=%d)", addr, bytes,
+  warning("INFO: os::commit_memory(" INTPTR_FORMAT ", " SIZE_FORMAT
+          ", %d) failed; error='%s' (DOS error/errno=%d)", p2i(addr), bytes,
           exec, buf_len != 0 ? buf : "<no_error_string>", err);
 }
 
@@ -4085,7 +4085,7 @@ int os::win32::exit_process_or_thread(Ept what, int exit_code) {
             handles[j++] = handles[i];
           } else {
             if (res == WAIT_FAILED) {
-              warning("WaitForSingleObject failed (%u) in %s: %d\n",
+              warning("WaitForSingleObject failed (%lu) in %s: %d\n",
                       GetLastError(), __FILE__, __LINE__);
             }
             // Don't keep the handle, if we failed waiting for it.
@@ -4107,7 +4107,7 @@ int os::win32::exit_process_or_thread(Ept what, int exit_code) {
               handles[i] = handles[i + 1];
             }
           } else {
-            warning("WaitForMultipleObjects %s (%u) in %s: %d\n",
+            warning("WaitForMultipleObjects %s (%lu) in %s: %d\n",
                     (res == WAIT_FAILED ? "failed" : "timed out"),
                     GetLastError(), __FILE__, __LINE__);
             // Don't keep handles, if we failed waiting for them.
@@ -4123,7 +4123,7 @@ int os::win32::exit_process_or_thread(Ept what, int exit_code) {
         hthr = GetCurrentThread();
         if (!DuplicateHandle(hproc, hthr, hproc, &handles[handle_count],
                              0, FALSE, DUPLICATE_SAME_ACCESS)) {
-          warning("DuplicateHandle failed (%u) in %s: %d\n",
+          warning("DuplicateHandle failed (%lu) in %s: %d\n",
                   GetLastError(), __FILE__, __LINE__);
 
           // We can't register this thread (no more handles) so this thread
@@ -4168,7 +4168,7 @@ int os::win32::exit_process_or_thread(Ept what, int exit_code) {
           }
           res = WaitForMultipleObjects(portion_count, handles + i, TRUE, timeout_left);
           if (res == WAIT_FAILED || res == WAIT_TIMEOUT) {
-            warning("WaitForMultipleObjects %s (%u) in %s: %d\n",
+            warning("WaitForMultipleObjects %s (%lu) in %s: %d\n",
                     (res == WAIT_FAILED ? "failed" : "timed out"),
                     GetLastError(), __FILE__, __LINE__);
             // Reset portion_count so we close the remaining
@@ -5538,7 +5538,7 @@ bool os::find(address addr, outputStream* st) {
   bool result = false;
   char buf[256];
   if (os::dll_address_to_library_name(addr, buf, sizeof(buf), &offset)) {
-    st->print(PTR_FORMAT " ", addr);
+    st->print(INTPTR_FORMAT " ", p2i(addr));
     if (strlen(buf) < sizeof(buf) - 1) {
       char* p = strrchr(buf, '\\');
       if (p) {
