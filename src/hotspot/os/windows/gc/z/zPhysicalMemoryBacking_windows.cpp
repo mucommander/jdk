@@ -157,10 +157,10 @@ public:
     size_t npages_res = npages;
     const bool res = AllocateUserPhysicalPages(ZAWESection, &npages_res, &_page_array[index]);
     if (!res) {
-      fatal("Failed to allocate physical memory " SIZE_FORMAT "M @ " PTR_FORMAT " (%ld)",
+      fatal("Failed to allocate physical memory " SIZE_FORMAT "M @ " INTPTR_FORMAT " (%ld)",
             size / M, untype(offset), GetLastError());
     } else {
-      log_debug(gc)("Allocated physical memory: " SIZE_FORMAT "M @ " PTR_FORMAT, size / M, untype(offset));
+      log_debug(gc)("Allocated physical memory: " SIZE_FORMAT "M @ " INTPTR_FORMAT, size / M, untype(offset));
     }
 
     // AllocateUserPhysicalPages might not be able to allocate the requested amount of memory.
@@ -175,7 +175,7 @@ public:
     size_t npages_res = npages;
     const bool res = FreeUserPhysicalPages(ZAWESection, &npages_res, &_page_array[index]);
     if (!res) {
-      fatal("Failed to uncommit physical memory " SIZE_FORMAT "M @ " PTR_FORMAT " (%ld)",
+      fatal("Failed to uncommit physical memory " SIZE_FORMAT "M @ " INTPTR_FORMAT " (%ld)",
             size, untype(offset), GetLastError());
     }
 
