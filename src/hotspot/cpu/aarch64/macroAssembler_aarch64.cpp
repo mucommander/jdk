@@ -1260,31 +1260,26 @@ void MacroAssembler::lookup_interface_method_stub(Register recv_klass,
   b(L_no_such_interface);
 
   // Loop: Look for resolved_class record in itable
-  //   L_save_holder_offset:
-  //     holder_offset = index;
   //   do {
   //     temp_itbl_klass = *(scan_temp += scan_step);
-  //     if (temp_itbl_klass == holder_klass) {
-  //        goto L_save_holder_offset;
-  //     }
   //     if (temp_itbl_klass == resolved_klass) {
   //        goto L_resolved_found;  // Found!
+  //     }
+  //     if (temp_itbl_klass == holder_klass) {
+  //        holder_offset = scan_temp;
   //     }
   //   } while (temp_itbl_klass != 0);
   //   goto L_no_such_interface // Not found.
   //
-  Label L_save_holder_offset;
-  bind(L_save_holder_offset);
-    mov(holder_offset, scan_temp);
-    // continue searching for resolved_found (checked above: resolved found != resolved class)
   Label L_loop_scan_resolved;
   bind(L_loop_scan_resolved);
     ldr(temp_itbl_klass, Address(pre(scan_temp, scan_step)));
-    bind(L_loop_scan_resolved_entry);
-    cmp(holder_klass, temp_itbl_klass);
-    br(Assembler::EQ, L_save_holder_offset);
+  bind(L_loop_scan_resolved_entry);
     cmp(resolved_klass, temp_itbl_klass);
     br(Assembler::EQ, L_resolved_found);
+    cmp(holder_klass, temp_itbl_klass);
+    br(Assembler::NE, L_loop_scan_resolved);
+    mov(holder_offset, scan_temp);
     cbnz(temp_itbl_klass, L_loop_scan_resolved);
 
   b(L_no_such_interface);
